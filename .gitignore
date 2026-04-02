@@ -1,3 +1,11 @@
 __pycache__/
 .cursor/
 .env
+
+# Ignore generated audio files
+Week_6/static/*.wav
+Week_6/uploads/*
+
+# Keep directories in Git (empty dir placeholder)
+Week_6/static/.gitkeep
+Week_6/uploads/.gitkeep

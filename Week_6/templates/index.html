@@ -1,83 +1,117 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Speech-to-Text</title>
+    <title>Azure Speech Services</title>
     <style>
-        body { font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: auto; }
-        .container { border: 2px solid #ce4b4b; border-radius: 10px; padding: 20px; }
-        .box { border: 1px solid #ddd; padding: 15px; border-radius: 5px; margin-bottom: 15px; }
-        button { padding: 10px 20px; cursor: pointer; border: none; border-radius: 5px; margin-top: 10px; }
-        .btn-transcribe { background-color: #ce4b4b; color: white; width: 100%;}
-        .status { margin-top: 10px; padding: 10px; display: none; border-radius: 5px;}
+        body { font-family: Arial, sans-serif; padding: 20px; background-color: #f9f9f9;}
+        .main-container { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap;}
+        .card { background: white; border: 2px solid #ddd; border-radius: 10px; padding: 20px; width: 100%; max-width: 450px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        .card-tts { border-color: #5a4bce; }
+        .card-stt { border-color: #ce4b4b; }
+        h2 { text-align: center; margin-top: 0;}
+        textarea { width: 100%; height: 100px; padding: 10px; box-sizing: border-box; margin-top: 5px; border: 1px solid #ccc; border-radius: 5px;}
+        button { padding: 10px; cursor: pointer; border: none; border-radius: 5px; width: 100%; margin-top: 10px; font-weight: bold;}
+        .btn-synth { background-color: #5a4bce; color: white; }
+        .btn-transcribe { background-color: #ce4b4b; color: white; }
+        .status { margin-top: 10px; padding: 10px; display: none; border-radius: 5px; text-align: center;}
         .success { background-color: #e8f5e9; color: #2e7d32; }
         .error { background-color: #ffebee; color: #c62828; }
-        textarea { width: 100%; height: 100px; padding: 10px; box-sizing: border-box; margin-top: 10px;}
+        .audio-section, .box { margin-top: 15px; background: #f1f1f1; padding: 15px; border-radius: 5px;}
+        audio { width: 100%; margin-top: 10px;}
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h2>🎤 Speech-to-Text</h2>
-    <p>Powered by Azure Cognitive Services</p>
-    
-    <div class="box">
-        <label for="audioFile">Upload audio to convert to text (.wav format):</label><br><br>
-        <input type="file" id="audioFile" accept="audio/wav">
+<h1 style="text-align: center; color: #333;">🎤 Azure Speech Services</h1>
+
+<div class="main-container">
+    <!-- TEXT TO SPEECH CARD -->
+    <div class="card card-tts">
+        <h2>Text-to-Speech</h2>
+        <label>Enter text to convert to speech:</label>
+        <textarea id="textInput" placeholder="Hello, EE471 class..."></textarea>
+        <button class="btn-synth" onclick="synthesizeSpeech()">Synthesize Speech</button>
+        <div id="statusTTS" class="status"></div>
+        
+        <div id="audioSection" class="audio-section" style="display: none;">
+            <strong>Generated Audio:</strong>
+            <audio id="audioPlayer" controls></audio>
+            <a id="downloadLink" href="#" download="generated_audio.wav" style="display: block; text-align: center; background: #2196F3; color: white; padding: 10px; text-decoration: none; border-radius: 5px; margin-top:10px;">Download Audio</a>
+        </div>
     </div>
 
-    <button class="btn-transcribe" onclick="transcribeAudio()">Transcribe Audio</button>
+    <!-- SPEECH TO TEXT CARD -->
+    <div class="card card-stt">
+        <h2>Speech-to-Text</h2>
+        <label>Upload audio (.wav) to convert to text:</label><br><br>
+        <input type="file" id="audioFile" accept="audio/wav" style="width: 100%;">
+        <button class="btn-transcribe" onclick="transcribeAudio()">Transcribe Audio</button>
+        <div id="statusSTT" class="status"></div>
 
-    <div id="statusMessage" class="status"></div>
-
-    <div class="box" style="margin-top: 15px;">
-        <strong>Transcription:</strong>
-        <textarea id="transcriptionResult" readonly placeholder="Result will appear here..."></textarea>
+        <div class="box">
+            <strong>Transcription:</strong>
+            <textarea id="transcriptionResult" readonly placeholder="Result will appear here..."></textarea>
+        </div>
     </div>
 </div>
 
 <script>
+    // Text to Speech Fonksiyonu
+    async function synthesizeSpeech() {
+        const text = document.getElementById('textInput').value;
+        const statusDiv = document.getElementById('statusTTS');
+        const audioSection = document.getElementById('audioSection');
+        
+        if (!text) return showStatus(statusDiv, 'Please enter some text.', 'error');
+        
+        showStatus(statusDiv, 'Synthesizing... Please wait.', 'success');
+        audioSection.style.display = 'none';
+
+        try {
+            const res = await fetch('/synthesize', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                showStatus(statusDiv, data.message, 'success');
+                document.getElementById('audioPlayer').src = data.audio_url;
+                document.getElementById('downloadLink').href = data.audio_url;
+                audioSection.style.display = 'block';
+            } else showStatus(statusDiv, data.error, 'error');
+        } catch (e) { showStatus(statusDiv, 'Network error.', 'error'); }
+    }
+
+    // Speech to Text Fonksiyonu
     async function transcribeAudio() {
         const fileInput = document.getElementById('audioFile');
-        const statusDiv = document.getElementById('statusMessage');
+        const statusDiv = document.getElementById('statusSTT');
         const resultBox = document.getElementById('transcriptionResult');
+        
+        if (!fileInput.files.length) return showStatus(statusDiv, 'Please choose a file.', 'error');
 
-        if (fileInput.files.length === 0) {
-            statusDiv.textContent = 'Please choose an audio file first.';
-            statusDiv.className = 'status error';
-            statusDiv.style.display = 'block';
-            return;
-        }
-
-        statusDiv.textContent = 'Transcribing... Please wait.';
-        statusDiv.className = 'status';
-        statusDiv.style.display = 'block';
+        showStatus(statusDiv, 'Transcribing... Please wait.', 'success');
         resultBox.value = '';
-
+        
         const formData = new FormData();
         formData.append('audio', fileInput.files[0]);
 
         try {
-            const response = await fetch('/transcribe', {
-                method: 'POST',
-                body: formData
-            });
-
-            const data = await response.json();
-
-            if (response.ok) {
-                statusDiv.textContent = data.message;
-                statusDiv.className = 'status success';
+            const res = await fetch('/transcribe', { method: 'POST', body: formData });
+            const data = await res.json();
+            if (res.ok) {
+                showStatus(statusDiv, data.message, 'success');
                 resultBox.value = data.text;
-            } else {
-                statusDiv.textContent = data.error;
-                statusDiv.className = 'status error';
-            }
-        } catch (error) {
-            statusDiv.textContent = 'Network or server error occurred.';
-            statusDiv.className = 'status error';
-        }
+            } else showStatus(statusDiv, data.error, 'error');
+        } catch (e) { showStatus(statusDiv, 'Network error.', 'error'); }
+    }
+
+    function showStatus(element, message, type) {
+        element.textContent = message;
+        element.className = 'status ' + type;
+        element.style.display = 'block';
     }
 </script>
 
