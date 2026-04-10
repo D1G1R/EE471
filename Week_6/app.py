@@ -1,13 +1,15 @@
 import os
+import shutil
 from flask import Flask, render_template, request, jsonify
 import azure.cognitiveservices.speech as speechsdk
 from dotenv import load_dotenv
 import time
 
 load_dotenv()
-
 app = Flask(__name__)
-os.makedirs('static', exist_ok=True)
+
+STATIC_DIR = 'static'
+os.makedirs(STATIC_DIR, exist_ok=True)
 os.makedirs('uploads', exist_ok=True)
 
 @app.route('/')
@@ -27,13 +29,19 @@ def synthesize():
         speech_region = os.getenv('SPEECH_REGION')
         speech_config = speechsdk.SpeechConfig(subscription=speech_key, region=speech_region)
         
-        filename = f"static/output_{int(time.time())}.wav"
-        audio_config = speechsdk.audio.AudioOutputConfig(filename=filename)
+        filename = f"output_{int(time.time())}.wav"
+        file_path = os.path.join('/tmp', filename)  # /tmp her zaman yazılabilir
+        audio_config = speechsdk.audio.AudioOutputConfig(filename=file_path)
         speech_synthesizer = speechsdk.SpeechSynthesizer(speech_config=speech_config, audio_config=audio_config)
         result = speech_synthesizer.speak_text_async(text).get()
 
         if result.reason == speechsdk.ResultReason.SynthesizingAudioCompleted:
-            return jsonify({'message': 'Audio successfully created!', 'audio_url': f'/{filename}'} )
+            dest_path = os.path.join(STATIC_DIR, filename)
+            shutil.move(file_path, dest_path)
+            return jsonify({
+                'message': 'Audio successfully created!',
+                'audio_url': f'/static/{filename}'
+            })
         elif result.reason == speechsdk.ResultReason.Canceled:
             return jsonify({'error': f'Error: {result.cancellation_details.reason}'}), 500
     except Exception as e:
