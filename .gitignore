@@ -1,6 +1,12 @@
 __pycache__/
-.cursor/
+*.py[cod]
+*.pyo
+*.pyd
+venv/
+**/venv/
 .env
+.cursor/
+.cog
 
 # Ignore generated audio files
 Week_6/static/*.wav
@@ -9,3 +15,9 @@ Week_6/uploads/*
 # Keep directories in Git (empty dir placeholder)
 Week_6/static/.gitkeep
 Week_6/uploads/.gitkeep
+
+# Week 7 temporary files
+Week_7/__pycache__/
+Week_7/venv/
+Week_7/input.jpg
+Week_7/hub/checkpoints/
