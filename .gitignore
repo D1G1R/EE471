@@ -8,6 +8,7 @@ venv/
 .cursor/
 .cog
 .vscode/
+*.tflite
 
 # Ignore generated audio files
 Week_6/static/*.wav
@@ -25,3 +26,4 @@ Week_7/hub/checkpoints/
 
 Week_9/*.jpg
 Week_9/*.png
+
