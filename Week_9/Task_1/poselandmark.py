@@ -17,12 +17,7 @@ if not os.path.exists(model_path):
     print("Model indirildi!")
 
 # 2. Test için örnek bir resim kullan
-image_path = 'pose-2.jpg' 
-if not os.path.exists(image_path):
-    print("Örnek test resmi indiriliyor...")
-    img_url = "https://storage.googleapis.com/mediapipe-assets/woman_doing_yoga.jpg"
-    urllib.request.urlretrieve(img_url, image_path)
-    print("Test resmi indirildi!")
+image_path = 'pose.jpg' 
 
 # 3. MediaPipe Pose Landmarker ayarları 
 base_options = python.BaseOptions(model_asset_path=model_path)

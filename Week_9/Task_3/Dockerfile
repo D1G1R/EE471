@@ -1,7 +1,6 @@
 # Temel Python imajını kullan
 FROM python:3.9-slim
 
-# Gerekli sistem kütüphanelerini yükle (OpenCV için)
 RUN apt-get update && apt-get install -y \
     libgl1 \
     libglib2.0-0 \
@@ -17,5 +16,5 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Tüm kodları ve test resimlerini kopyala
 COPY . .
 
-# Konteyner çalıştığında dışarıdan dosya argümanı alabilecek şekilde ayarla
-ENTRYPOINT ["python", "pose_classifier.py"]
+# Konteyner çalıştığında argüman alarak bu scripti çalıştır
+ENTRYPOINT ["python", "face_classifier.py"]
