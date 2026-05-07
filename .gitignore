@@ -4,6 +4,8 @@ __pycache__/
 *.pyd
 venv/
 **/venv/
+.venv/
+**/.venv/
 .env
 .cursor/
 .cog
@@ -24,6 +26,8 @@ Week_7/venv/
 Week_7/input.jpg
 Week_7/hub/checkpoints/
 
-Week_9/*.jpg
-Week_9/*.png
+Week_9/**/*.jpg
+Week_9/**/*.png
+Week_9/**/*.task
 
+Week_10/.gradio
